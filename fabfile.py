@@ -3,9 +3,21 @@ import fabric.contrib.project as project
 import os
 import shutil
 import sys
-import SocketServer
+import socketserver
 
 from pelican.server import ComplexHTTPRequestHandler
+from datetime import datetime
+
+TEMPLATE = """
+Title: {title}
+Date: {year}-{month}-{day} {hour}:{minute:02d}
+Category:
+Tags:
+Slug: {slug}
+Authors:
+
+
+"""
 
 # Local path configuration (can be absolute or relative to fabfile)
 env.deploy_path = 'output'
@@ -48,7 +60,7 @@ def serve():
     """Serve site at http://localhost:8000/"""
     os.chdir(env.deploy_path)
 
-    class AddressReuseTCPServer(SocketServer.TCPServer):
+    class AddressReuseTCPServer(socketserver.TCPServer):
         allow_reuse_address = True
 
     server = AddressReuseTCPServer(('', PORT), ComplexHTTPRequestHandler)
@@ -90,3 +102,35 @@ def gh_pages():
     """Publish to GitHub Pages"""
     rebuild()
     local("ghp-import -b {github_pages_branch} {deploy_path} -p".format(**env))
+
+# TEMPLATE is declared before hand, and all the necessary imports made
+def make_entry(title):
+    today = datetime.today()
+    slug = title.lower().strip().replace(' ', '-')
+    f_create = "content/{}_{:0>2}_{:0>2}_{}.md".format(
+        today.year, today.month, today.day, slug)
+    t = TEMPLATE.strip().format(title=title,                                
+                                year=today.year,
+                                month=today.month,
+                                day=today.day,
+                                hour=today.hour,
+                                minute=today.minute,
+                                slug=slug)
+    with open(f_create, 'w') as w:
+        w.write(t)
+    print("File created -> " + f_create)
+
+import livereload
+def live_build(port=8080):
+    local('make clean')  # 1
+    local('make html')  # 2
+    os.chdir('output')  # 3
+    server = livereload.Server()  # 4
+    server.watch('../content/*.md',  # 5
+        livereload.shell('pelican -s ../pelicanconf.py -o ../output'))  # 6
+    server.watch('../pelican-themes/pelican-octopress-theme/',  # 7
+        livereload.shell('pelican -s ../pelicanconf.py -o ../output'))  # 8
+    server.watch('*.html')  # 9
+    server.watch('*.css')  # 10
+    server.serve(liveport=35729, port=port)  # 11
+    
