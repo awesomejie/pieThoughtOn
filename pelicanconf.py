@@ -36,3 +36,6 @@ DEFAULT_PAGINATION = 10
 
 #THEME = 'pelican-themes/pelican-octopress-theme'
 THEME = 'pelican-themes/Responsive-Pelican'
+
+PLUGIN_PATHS = ['pelican-plugins',]
+PLUGINS = ['summary', 'render_math',]
