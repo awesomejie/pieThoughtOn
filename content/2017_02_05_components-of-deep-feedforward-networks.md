@@ -1,7 +1,7 @@
 Title: Components of Deep Feedforward Networks
 Date: 2017-2-5 13:52
-Category:
-Tags: deep learning
+Category: deep learning
+Tags:
 Slug: components-of-deep-feedforward-networks
 Authors:
 
